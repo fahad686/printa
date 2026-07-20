@@ -10,6 +10,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Hive Local Storage
+  //hive data
   await Hive.initFlutter();
   await Hive.openBox<String>(AppConstants.settingsBox);
   await Hive.openBox<String>(AppConstants.historyBox);
