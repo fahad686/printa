@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-feature android:name="android.hardware.nfc" android:required="false" />
     <application
-        android:label="printa"
+        android:label="Printa"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
@@ -42,10 +44,9 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-        <package android:name="woyou.aio.service" />
-        <package android:name="com.sunmi.extprinterservice" />
         <intent>
-            <action android:name="woyou.aio.service.impl.WoyouService" />
+            <action android:name="woyou.aidlservice.jiuiv5.IWoyouService" />
         </intent>
+        <package android:name="woyou.aidlservice.jiuiv5" />
     </queries>
 </manifest>

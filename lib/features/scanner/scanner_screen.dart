@@ -151,12 +151,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       await scannerService.triggerHardwareScan();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Triggered SUNMI Laser Hardware Scanner!'),
+                          content: Text('Triggered hardware laser scanner!'),
                         ),
                       );
                     },
                     icon: const Icon(Icons.barcode_reader),
-                    label: const Text('Trigger SUNMI Laser Hardware'),
+                    label: const Text('Trigger Hardware Scanner'),
                   ),
                 ),
               ],

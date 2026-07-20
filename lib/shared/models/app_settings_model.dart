@@ -9,6 +9,7 @@ class AppSettingsModel {
   final String? businessLogo;
   final double defaultTaxPercentage;
   final String defaultTemplateId;
+  final bool onboardingCompleted;
 
   AppSettingsModel({
     this.themeMode = 'dark',
@@ -18,6 +19,7 @@ class AppSettingsModel {
     this.businessLogo,
     this.defaultTaxPercentage = AppConstants.defaultTaxRate,
     this.defaultTemplateId = 'tpl_restaurant',
+    this.onboardingCompleted = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -28,6 +30,7 @@ class AppSettingsModel {
         'businessLogo': businessLogo,
         'defaultTaxPercentage': defaultTaxPercentage,
         'defaultTemplateId': defaultTemplateId,
+        'onboardingCompleted': onboardingCompleted,
       };
 
   factory AppSettingsModel.fromJson(Map<String, dynamic> json) => AppSettingsModel(
@@ -39,6 +42,7 @@ class AppSettingsModel {
         defaultTaxPercentage:
             (json['defaultTaxPercentage'] as num?)?.toDouble() ?? 10.0,
         defaultTemplateId: json['defaultTemplateId'] ?? 'tpl_restaurant',
+        onboardingCompleted: json['onboardingCompleted'] as bool? ?? false,
       );
 
   String toJsonString() => jsonEncode(toJson());
@@ -54,6 +58,7 @@ class AppSettingsModel {
     String? businessLogo,
     double? defaultTaxPercentage,
     String? defaultTemplateId,
+    bool? onboardingCompleted,
   }) {
     return AppSettingsModel(
       themeMode: themeMode ?? this.themeMode,
@@ -63,6 +68,7 @@ class AppSettingsModel {
       businessLogo: businessLogo ?? this.businessLogo,
       defaultTaxPercentage: defaultTaxPercentage ?? this.defaultTaxPercentage,
       defaultTemplateId: defaultTemplateId ?? this.defaultTemplateId,
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }
 }

@@ -1,86 +1,134 @@
-# SUNMI Hardware Test Suite
+# Printa
 
-A modular, production-quality Flutter application designed to test and showcase every important hardware capability of **SUNMI V3** handheld POS devices. 
+A modular Flutter app for **handheld POS devices and thermal printers**. Design, preview, and print receipts, QR codes, barcodes, NFC tags, and PDF invoices — with a focus on SUNMI-style POS hardware (e.g. V3) and graceful fallbacks on phones and simulators.
 
----
-
-## 📱 Features & Modules
-
-- **Dashboard:** Modern Material 3 grid with real-time hardware status indicators (Printer status, Paper status, Battery %, RAM, Storage).
-- **Module 1 – Receipt Builder:** Dynamic receipt creation with auto-calculated subtotals, tax %, discounts, item line management, live preview, thermal printing, PDF export, and sharing.
-- **Module 2 – Receipt Templates:** Live interactive preview switcher with 8 pre-designed receipt styles (*Restaurant*, *Retail*, *Pharmacy*, *Courier*, *Parking Ticket*, *Warehouse*, *Simple Invoice*, *Dark Theme Receipt*).
-- **Module 3 – QR Generator:** Supports 8 payload formats (Plain Text, URL, Invoice JSON, WiFi, Phone, Email, vCard, UPI/Payment) with custom QR sizing, foreground/background color pickers, and direct thermal printing.
-- **Module 4 – Barcode Generator:** Symbology support for 7 formats (**Code128**, **Code39**, **EAN13**, **EAN8**, **UPC-A**, **PDF417**, **Data Matrix**).
-- **Module 5 – Scanner:** Dual-mode barcode scanner supporting hardware SUNMI laser broadcast triggers via MethodChannel with camera fallback (`mobile_scanner`).
-- **Module 6 – NFC Manager:** NDEF tag reading, writing, erasing, and locking with tag UID and technology inspection.
-- **Module 7 – Invoice in NFC:** Encode dynamic receipt JSON onto NDEF tags. Tap tag to read, reconstruct, preview, and print invoices.
-- **Module 8 – QR to Receipt (Offline Invoice Transfer):** Encode invoices into QR codes; scan with camera/laser to reconstruct receipts offline for instant printing.
-- **Module 9 – PDF Generator:** Multi-format PDF exporter (A4, 58mm roll, 80mm roll) with an interactive digital signature drawing canvas.
-- **Module 10 – SUNMI Printer Direct Test Bench:** Command bench for text alignments (Left, Center, Right), text styles (Bold, Underline, Font Sizes), tables, paper feeding, paper cutting, and status queries.
-- **Module 11 – History Box:** Local Hive database persisting all printed receipts, scanned codes, generated QRs/barcodes, NFC logs, and PDFs with search, category filters, and re-printing capabilities.
-- **Module 12 – Device Information & Settings:** Comprehensive system diagnostics and global application preferences.
+**Developed by** Fahad Ali, Senior Mobile App Consultant.
 
 ---
 
-## 🛠️ Technology Stack
+## Highlights
 
-- **Framework:** Flutter Stable (Dart 3.x)
-- **State Management:** Riverpod (`flutter_riverpod`)
-- **Architecture:** Clean Architecture + MVVM + Repository Pattern
-- **Routing:** `go_router`
-- **Local Database:** Hive (`hive`, `hive_flutter`)
-- **PDF & Printing:** `pdf`, `printing`
-- **Hardware Integrations:** SUNMI AIDL MethodChannel (`com.sunmi.hardware/*`) with fallback mocks for non-SUNMI devices
-- **NFC & Scanner:** `nfc_manager`, `mobile_scanner`
-- **UI & Aesthetics:** Material 3 Dark/Light themes
+- **Splash & onboarding** — first-run intro, then home
+- **Floating pill bottom nav** — Dashboard · Scanner · NFC · History · Settings
+- **Printa orange** Material 3 light/dark themes
+- **Built-in thermal printing** via Sunmi printer library + MethodChannels (Android POS)
+- **Offline-first** Hive storage for settings, history, and templates
 
 ---
 
-## 📂 Project Structure
+## Features & Modules
+
+| Module | Description |
+|--------|-------------|
+| **Dashboard** | Module grid, hardware status banner (printer, paper, battery, RAM, storage) |
+| **1 – Receipt Builder** | Dynamic receipts with tax/discount, live preview, thermal print, PDF, share |
+| **2 – Receipt Templates** | 8 presets; edit, persist in Hive, share as PNG/PDF |
+| **3 – QR Generator** | Plain text, URL, Invoice JSON, WiFi, Phone, Email, vCard, UPI — print & share |
+| **4 – Barcode Generator** | Code128, Code39, EAN13, EAN8, UPC-A, PDF417, Data Matrix |
+| **5 – Scanner** | Hardware laser (MethodChannel) + camera fallback (`mobile_scanner`) |
+| **6 – NFC Manager** | Read / write / update / erase NDEF; UID & tech inspection |
+| **7 – Invoice in NFC** | Encode receipt JSON on tags; tap to reconstruct, preview, print |
+| **8 – QR to Receipt** | Offline invoice transfer via QR encode → scan → print |
+| **9 – PDF Generator** | A4 / 58mm / 80mm roll + signature canvas |
+| **10 – Printer Test Bench** | Alignments, styles, tables, feed, cut, status |
+| **11 – History Box** | Hive log of receipts, scans, QRs, barcodes, NFC, PDFs — search, filter, reprint |
+| **12 – Device Info & Settings** | Diagnostics and global prefs (business, tax, paper width, theme) |
+
+---
+
+## Technology Stack
+
+| Area | Choice |
+|------|--------|
+| Framework | Flutter (Dart 3.x) |
+| State | Riverpod (`flutter_riverpod`) |
+| Routing | `go_router` + `StatefulShellRoute` (tab shell) |
+| Storage | Hive (`hive`, `hive_flutter`) |
+| PDF / share | `pdf`, `printing`, `share_plus` |
+| Codes | `qr_flutter`, `barcode_widget`, `mobile_scanner` |
+| NFC | `nfc_manager` |
+| Printer (Android) | `com.sunmi:printerlibrary` + MethodChannels `com.sunmi.hardware/*` |
+| UI | Material 3, Printa orange brand palette |
+
+---
+
+## Project Structure
 
 ```text
 lib/
-├── main.dart                          # App Entrypoint & Hive Initialization
+├── main.dart
 ├── core/
-│   ├── constants/app_constants.dart   # Brand colors, defaults, Hive keys
-│   ├── router/app_router.dart         # GoRouter path definitions
-│   └── theme/app_theme.dart           # Material 3 light & dark theme setup
+│   ├── constants/app_constants.dart
+│   ├── router/app_router.dart          # Splash, onboarding, shell tabs, feature routes
+│   └── theme/app_theme.dart
 ├── native/
-│   ├── sunmi_printer_service.dart     # MethodChannel interface for SUNMI Printer
-│   ├── sunmi_scanner_service.dart     # MethodChannel interface for SUNMI Scanner
-│   └── device_info_service.dart       # Platform metrics (RAM, Battery, Android OS)
+│   ├── sunmi_printer_service.dart
+│   ├── sunmi_scanner_service.dart
+│   └── device_info_service.dart
 ├── shared/
-│   ├── models/                        # Domain models (Invoice, Templates, History, Settings)
-│   ├── repositories/                  # Hive repositories (HistoryRepository, SettingsRepository)
-│   └── widgets/                       # Reusable UI widgets (ReceiptPreviewWidget, CustomCard, SignatureCanvasWidget)
-└── features/                          # 12 Hardware & Feature Modules
+│   ├── models/
+│   ├── repositories/                 # Settings, history, templates
+│   ├── utils/
+│   └── widgets/                      # Floating pill nav, cards, preview, validation…
+└── features/
+    ├── splash/
+    ├── onboarding/
+    ├── shell/                        # MainShell + floating pill bottom nav
+    ├── dashboard/
+    ├── receipt_builder/
+    ├── receipt_templates/
+    ├── qr_generator/
+    ├── barcode_generator/
+    ├── scanner/
+    ├── nfc/                          # Hub + read/write/update/delete
+    ├── nfc_invoice/
+    ├── qr_invoice/
+    ├── pdf_generator/
+    ├── sunmi_printer/
+    ├── history/
+    ├── device_info/
+    └── settings/
 ```
+
+**Primary tab routes:** `/` · `/scanner` · `/nfc` · `/history` · `/settings`  
+Module screens (receipt builder, PDF, printer bench, etc.) push full-screen without the bottom bar.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- Flutter SDK `^3.41.0` or higher
-- Android SDK with Java 21 / Android Studio
-- SUNMI V3 device (or standard Android / macOS / iOS simulator with virtual fallback)
+- Flutter SDK matching `pubspec.yaml` (`sdk: ^3.11.5`)
+- Android SDK / Android Studio (Java 17+)
+- For real thermal print & laser scan: a compatible handheld POS (e.g. SUNMI V3)
+- Phones / simulators: UI, PDF, QR, camera scanner, and mocks work; built-in thermal print is POS/Android-oriented
 
-### Run Application
+### Run
 
 ```bash
-# Get dependencies
 flutter pub get
-
-# Run static analysis
 dart analyze
-
-# Run application
 flutter run
+```
+
+### Wireless Android (example)
+
+```bash
+flutter devices
+flutter run -d <device-id>
 ```
 
 ---
 
-## 📄 License
+## Platform notes
+
+- **Android POS:** Inner printer via Sunmi `InnerPrinterManager` / AIDL service `woyou.aidlservice.jiuiv5`
+- **Non-POS Android / iOS:** MethodChannel calls fail safely; camera scanner and PDF/share still work
+- **NFC:** Requires NFC hardware + permission; hub shows availability clearly
+
+---
+
+## License
 
 This project is licensed under the MIT License.

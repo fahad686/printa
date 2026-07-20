@@ -73,7 +73,7 @@ class DeviceInfoService {
       return DeviceMetrics(
         deviceName: map['deviceName'] as String? ?? 'Android Device',
         model: map['model'] as String? ?? 'V3 / Standard Android',
-        manufacturer: map['manufacturer'] as String? ?? 'SUNMI',
+        manufacturer: map['manufacturer'] as String? ?? 'Unknown',
         androidVersion: map['androidVersion'] as String? ?? '13.0',
         sdkInt: map['sdkInt'] as int? ?? 33,
         batteryLevel: map['batteryLevel'] as int? ?? 90,
@@ -88,9 +88,9 @@ class DeviceInfoService {
       );
     } catch (_) {
       return DeviceMetrics(
-        deviceName: 'SUNMI V3 Handheld',
+        deviceName: 'Handheld POS Device',
         model: 'V3 Mobile POS',
-        manufacturer: 'SUNMI',
+        manufacturer: 'Handheld POS',
         androidVersion: 'Android 13.0',
         sdkInt: 33,
         batteryLevel: 95,

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'invoice_model.dart';
 
 enum ReceiptTemplateType {
@@ -27,6 +29,53 @@ class ReceiptTemplateModel {
     required this.description,
     required this.sampleInvoice,
   });
+
+  ReceiptTemplateModel copyWith({
+    String? title,
+    String? category,
+    ReceiptTemplateType? type,
+    String? description,
+    InvoiceModel? sampleInvoice,
+  }) {
+    return ReceiptTemplateModel(
+      id: id,
+      title: title ?? this.title,
+      category: category ?? this.category,
+      type: type ?? this.type,
+      description: description ?? this.description,
+      sampleInvoice: sampleInvoice ?? this.sampleInvoice,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'category': category,
+        'type': type.name,
+        'description': description,
+        'sample_invoice': sampleInvoice.toJson(),
+      };
+
+  factory ReceiptTemplateModel.fromJson(Map<String, dynamic> json) {
+    return ReceiptTemplateModel(
+      id: json['id'] ?? '',
+      title: json['title'] ?? 'Template',
+      category: json['category'] ?? 'General',
+      type: ReceiptTemplateType.values.firstWhere(
+        (t) => t.name == json['type'],
+        orElse: () => ReceiptTemplateType.simpleInvoice,
+      ),
+      description: json['description'] ?? '',
+      sampleInvoice: InvoiceModel.fromJson(
+        json['sample_invoice'] as Map<String, dynamic>? ?? {},
+      ),
+    );
+  }
+
+  String toJsonString() => jsonEncode(toJson());
+
+  factory ReceiptTemplateModel.fromJsonString(String jsonStr) =>
+      ReceiptTemplateModel.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
 
   static List<ReceiptTemplateModel> get defaultTemplates => [
         ReceiptTemplateModel(
@@ -69,7 +118,7 @@ class ReceiptTemplateModel {
             taxPercentage: 10.0,
             discountPercentage: 15.0,
             items: [
-              InvoiceItem(id: '1', name: 'SUNMI V3 Silicone Case', quantity: 1, unitPrice: 24.99),
+              InvoiceItem(id: '1', name: 'Handheld POS Silicone Case', quantity: 1, unitPrice: 24.99),
               InvoiceItem(id: '2', name: 'Thermal Paper Rolls 58mm (10x)', quantity: 2, unitPrice: 14.50),
               InvoiceItem(id: '3', name: 'USB-C Fast Charger', quantity: 1, unitPrice: 19.99),
             ],
@@ -159,7 +208,7 @@ class ReceiptTemplateModel {
             notes: 'Zone B - Shelf 14 - Bin 02',
             items: [
               InvoiceItem(id: '1', name: 'SKU-8821: Industrial Printer Head', quantity: 3, unitPrice: 120.00),
-              InvoiceItem(id: '2', name: 'SKU-1049: SUNMI Battery Pack 7.7V', quantity: 5, unitPrice: 45.00),
+              InvoiceItem(id: '2', name: 'SKU-1049: POS Battery Pack 7.7V', quantity: 5, unitPrice: 45.00),
             ],
           ),
         ),
@@ -171,7 +220,7 @@ class ReceiptTemplateModel {
           description: 'Clean minimal invoice for quick cashier checkout.',
           sampleInvoice: InvoiceModel(
             id: 'sim_01',
-            companyName: 'SUNMI Quick Pay',
+            companyName: 'Printa Quick Pay',
             customerName: 'Cash Sale',
             invoiceNumber: 'QP-0012',
             date: DateTime.now(),

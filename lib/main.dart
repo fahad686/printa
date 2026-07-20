@@ -9,21 +9,51 @@ import 'shared/repositories/settings_repository.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive Local Storage
-  await Hive.initFlutter();
-  await Hive.openBox<String>(AppConstants.settingsBox);
-  await Hive.openBox<String>(AppConstants.historyBox);
-  await Hive.openBox<String>(AppConstants.templatesBox);
+  // Global Flutter error handler — logs instead of crashing to black screen
+  FlutterError.onError = (FlutterErrorDetails details) {
+    debugPrint('[FLUTTER_ERROR] ${details.exceptionAsString()}');
+    debugPrint('[FLUTTER_ERROR] Stack: ${details.stack}');
+    FlutterError.presentError(details);
+  };
 
+  // Initialize Hive Local Storage
+  debugPrint('[MAIN] Initializing Hive...');
+  await Hive.initFlutter();
+
+  // Open boxes with individual guards so one failure doesn't kill the app
+  for (final boxName in [
+    AppConstants.settingsBox,
+    AppConstants.historyBox,
+    AppConstants.templatesBox,
+  ]) {
+    try {
+      if (!Hive.isBoxOpen(boxName)) {
+        await Hive.openBox<String>(boxName);
+      }
+      debugPrint('[MAIN] Hive box opened: $boxName');
+    } catch (e) {
+      debugPrint('[MAIN] WARNING: Failed to open Hive box "$boxName": $e');
+      // Delete and recreate corrupt box
+      try {
+        await Hive.deleteBoxFromDisk(boxName);
+        await Hive.openBox<String>(boxName);
+        debugPrint('[MAIN] Hive box recreated: $boxName');
+      } catch (e2) {
+        debugPrint('[MAIN] CRITICAL: Could not recreate box "$boxName": $e2');
+      }
+    }
+  }
+
+  debugPrint('[MAIN] Starting PrintaApp...');
   runApp(
     const ProviderScope(
-      child: SunmiApp(),
+      child: PrintaApp(),
     ),
   );
 }
 
-class SunmiApp extends ConsumerWidget {
-  const SunmiApp({super.key});
+class PrintaApp extends ConsumerWidget {
+  const PrintaApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

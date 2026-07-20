@@ -30,9 +30,9 @@ class _PDFGeneratorScreenState extends ConsumerState<PDFGeneratorScreen> {
   PdfPageFormat _getPdfPageFormat() {
     switch (_pageFormatType) {
       case '58mm Roll':
-        return const PdfPageFormat(58 * PdfPageFormat.mm, double.infinity);
+        return const PdfPageFormat(58 * PdfPageFormat.mm, 200 * PdfPageFormat.mm);
       case '80mm Roll':
-        return const PdfPageFormat(80 * PdfPageFormat.mm, double.infinity);
+        return const PdfPageFormat(80 * PdfPageFormat.mm, 200 * PdfPageFormat.mm);
       case 'Letter':
         return PdfPageFormat.letter;
       default:
@@ -125,6 +125,7 @@ class _PDFGeneratorScreenState extends ConsumerState<PDFGeneratorScreen> {
           // PDF Interactive Preview
           Expanded(
             child: PdfPreview(
+              key: ValueKey(_pageFormatType),
               build: (format) => PdfHelper.generateInvoicePdf(
                 _invoice,
                 pageFormat: _getPdfPageFormat(),

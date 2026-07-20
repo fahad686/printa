@@ -3,12 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:printa/main.dart';
 
 void main() {
-  testWidgets('SunmiApp smoke test', (WidgetTester tester) async {
+  testWidgets('PrintaApp smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
-        child: SunmiApp(),
+        child: PrintaApp(),
       ),
     );
-    expect(find.byType(SunmiApp), findsOneWidget);
+    expect(find.byType(PrintaApp), findsOneWidget);
   });
 }

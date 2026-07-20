@@ -116,7 +116,7 @@ class _QRInvoiceScreenState extends ConsumerState<QRInvoiceScreen> {
                       children: [
                         const SizedBox(height: 10),
                         const Text(
-                          'Encoded Invoice QR Code (Scan with another SUNMI V3)',
+                          'Encoded Invoice QR Code (Scan with another device)',
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 10),

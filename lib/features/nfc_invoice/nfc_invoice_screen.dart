@@ -27,7 +27,7 @@ class _NFCInvoiceScreenState extends ConsumerState<NFCInvoiceScreen> {
   void _writeInvoiceToNfc() {
     setState(() {
       _isBusy = true;
-      _status = 'Approach SUNMI V3 to NFC tag to store invoice...';
+      _status = 'Approach device to NFC tag to store invoice...';
     });
 
     final jsonStr = _currentInvoice.toCompactJsonString();
@@ -64,7 +64,7 @@ class _NFCInvoiceScreenState extends ConsumerState<NFCInvoiceScreen> {
   void _readInvoiceFromNfc() {
     setState(() {
       _isBusy = true;
-      _status = 'Hold SUNMI V3 near encoded NFC Tag to read...';
+      _status = 'Hold device near encoded NFC tag to read...';
     });
 
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {

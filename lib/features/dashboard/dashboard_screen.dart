@@ -30,25 +30,13 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(width: 8),
             const Flexible(
               child: Text(
-                'SUNMI Test Suite',
+                'Printa',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history_rounded),
-            tooltip: 'History',
-            onPressed: () => context.push('/history'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_rounded),
-            tooltip: 'Settings',
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(12),
@@ -68,7 +56,7 @@ class DashboardScreen extends ConsumerWidget {
                     gradient: LinearGradient(
                       colors: [
                         AppConstants.primaryOrange,
-                        Colors.deepOrangeAccent.shade400,
+                        AppConstants.orangeDark,
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -96,7 +84,7 @@ class DashboardScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isSunmi ? 'SUNMI V3 Active' : 'Virtual Engine Active',
+                              isSunmi ? 'Handheld POS Active' : 'Virtual Engine Active',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
@@ -115,7 +103,7 @@ class DashboardScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      StatusBadge.success(isSunmi ? 'SUNMI HW' : 'VIRTUAL',
+                      StatusBadge.success(isSunmi ? 'POS HW' : 'VIRTUAL',
                           icon: isSunmi
                               ? Icons.verified_rounded
                               : Icons.laptop_chromebook_rounded),
@@ -127,8 +115,16 @@ class DashboardScreen extends ConsumerWidget {
 
             const SizedBox(height: 16),
             const Text(
-              'Hardware & Testing Modules',
+              'Modules',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              AppConstants.appTagline,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
             ),
             const SizedBox(height: 10),
 
@@ -146,7 +142,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'Receipt Builder',
                   subtitle: 'Module 1',
                   icon: Icons.receipt_long_rounded,
-                  color: Colors.orange,
+                  color: AppConstants.primaryOrange,
                   route: '/receipt-builder',
                 ),
                 _buildDashboardTile(
@@ -154,7 +150,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'Templates',
                   subtitle: 'Module 2 • 8 Presets',
                   icon: Icons.dashboard_customize_rounded,
-                  color: Colors.indigo,
+                  color: AppConstants.orangeDark,
                   route: '/receipt-templates',
                 ),
                 _buildDashboardTile(
@@ -162,7 +158,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'QR Generator',
                   subtitle: 'Module 3',
                   icon: Icons.qr_code_2_rounded,
-                  color: Colors.teal,
+                  color: AppConstants.orangeLight,
                   route: '/qr-generator',
                 ),
                 _buildDashboardTile(
@@ -170,7 +166,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'Barcode Gen',
                   subtitle: 'Module 4 • 7 Format',
                   icon: Icons.qr_code_scanner_rounded,
-                  color: Colors.blue,
+                  color: AppConstants.primaryOrange,
                   route: '/barcode-generator',
                 ),
                 _buildDashboardTile(
@@ -178,7 +174,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'Scanner',
                   subtitle: 'Module 5 • Laser/Cam',
                   icon: Icons.center_focus_strong_rounded,
-                  color: Colors.purple,
+                  color: AppConstants.orangeDeep,
                   route: '/scanner',
                 ),
                 _buildDashboardTile(
@@ -186,7 +182,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'NFC Manager',
                   subtitle: 'Module 6 • Read/Write',
                   icon: Icons.nfc_rounded,
-                  color: Colors.pink,
+                  color: AppConstants.orangeDark,
                   route: '/nfc',
                 ),
                 _buildDashboardTile(
@@ -194,7 +190,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'Invoice in NFC',
                   subtitle: 'Module 7 • Tap Sync',
                   icon: Icons.tap_and_play_rounded,
-                  color: Colors.cyan,
+                  color: AppConstants.primaryOrange,
                   route: '/nfc-invoice',
                 ),
                 _buildDashboardTile(
@@ -202,7 +198,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'QR to Receipt',
                   subtitle: 'Module 8 • Transfer',
                   icon: Icons.sync_alt_rounded,
-                  color: Colors.deepOrange,
+                  color: AppConstants.orangeLight,
                   route: '/qr-invoice',
                 ),
                 _buildDashboardTile(
@@ -210,15 +206,15 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'PDF Generator',
                   subtitle: 'Module 9 • A4/58/80mm',
                   icon: Icons.picture_as_pdf_rounded,
-                  color: Colors.redAccent,
+                  color: AppConstants.orangeDeep,
                   route: '/pdf-generator',
                 ),
                 _buildDashboardTile(
                   context,
-                  title: 'SUNMI Printer',
+                  title: 'Printer Test Bench',
                   subtitle: 'Module 10 • Bench',
                   icon: Icons.print_rounded,
-                  color: Colors.amber.shade800,
+                  color: AppConstants.primaryOrange,
                   route: '/sunmi-printer',
                 ),
                 _buildDashboardTile(
@@ -226,7 +222,7 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'History Box',
                   subtitle: 'Module 11 • Database',
                   icon: Icons.storage_rounded,
-                  color: Colors.green,
+                  color: AppConstants.orangeDark,
                   route: '/history',
                 ),
                 _buildDashboardTile(
@@ -234,10 +230,35 @@ class DashboardScreen extends ConsumerWidget {
                   title: 'Device Info',
                   subtitle: 'Module 12 • Hardware',
                   icon: Icons.perm_device_information_rounded,
-                  color: Colors.blueGrey,
+                  color: AppConstants.orangeLight,
                   route: '/device-info',
                 ),
               ],
+            ),
+
+            const SizedBox(height: 20),
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    'Developed by ${AppConstants.developerName}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    AppConstants.developerTitle,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppConstants.primaryOrange,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           ],
         ),
@@ -253,9 +274,16 @@ class DashboardScreen extends ConsumerWidget {
     required Color color,
     required String route,
   }) {
+    const tabRoutes = {'/', '/scanner', '/nfc', '/history', '/settings'};
     return CustomCard(
       padding: const EdgeInsets.all(10),
-      onTap: () => context.push(route),
+      onTap: () {
+        if (tabRoutes.contains(route)) {
+          context.go(route);
+        } else {
+          context.push(route);
+        }
+      },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -61,7 +61,7 @@ class DeviceInfoScreen extends ConsumerWidget {
                           ),
                         ),
                         StatusBadge.success(
-                          metrics.isSunmiHardware ? 'SUNMI HARDWARE' : 'VIRTUAL MOCK',
+                          metrics.isSunmiHardware ? 'POS HARDWARE' : 'VIRTUAL MOCK',
                         ),
                       ],
                     ),
@@ -97,7 +97,7 @@ class DeviceInfoScreen extends ConsumerWidget {
                             'NFC Chip', metrics.isNfcAvailable ? 'Available' : 'N/A'),
                         _buildMetricRow('Laser Scanner',
                             metrics.isScannerAvailable ? 'Available / Camera Fallback' : 'N/A'),
-                        _buildMetricRow('SUNMI SDK Version', AppConstants.appVersion),
+                        _buildMetricRow('App Version', AppConstants.appVersion),
                       ],
                     ),
                   ),

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/constants/app_constants.dart';
+import '../../shared/utils/payload_validator.dart';
+import '../../shared/widgets/validation_banner.dart';
 import '../../native/sunmi_printer_service.dart';
 import '../../shared/models/history_item_model.dart';
 import '../../shared/repositories/history_repository.dart';
@@ -18,7 +20,7 @@ class QRGeneratorScreen extends ConsumerStatefulWidget {
 class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
   String _qrType = 'Plain Text';
   final TextEditingController _inputController =
-      TextEditingController(text: 'https://sunmi.com');
+      TextEditingController(text: 'https://printa.app');
 
   double _qrSize = 200.0;
   Color _fgColor = Colors.black;
@@ -41,7 +43,7 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
       _qrType = type;
       switch (type) {
         case 'URL':
-          _inputController.text = 'https://sunmi.com';
+          _inputController.text = 'https://printa.app';
           break;
         case 'Invoice JSON':
           _inputController.text = '{"inv":"INV-909","total":150.0,"cust":"Alice"}';
@@ -53,18 +55,18 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
           _inputController.text = 'tel:+18005550199';
           break;
         case 'Email':
-          _inputController.text = 'mailto:support@sunmi.com?subject=Inquiry';
+          _inputController.text = 'mailto:support@printa.app?subject=Inquiry';
           break;
         case 'vCard':
           _inputController.text =
-              'BEGIN:VCARD\nVERSION:3.0\nN:Smith;John\nORG:SUNMI Tech\nTEL:+18005550199\nEND:VCARD';
+              'BEGIN:VCARD\nVERSION:3.0\nN:Smith;John\nORG:Printa Tech\nTEL:+18005550199\nEND:VCARD';
           break;
         case 'UPI / Payment':
           _inputController.text =
-              'upi://pay?pa=sunmi@bank&pn=SUNMITech&am=50.00&cu=USD';
+              'upi://pay?pa=printa@bank&pn=PrintaTech&am=50.00&cu=USD';
           break;
         default:
-          _inputController.text = 'Hello SUNMI POS';
+          _inputController.text = 'Hello Printa POS';
       }
     });
   }
@@ -99,6 +101,14 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
   }
 
   Future<void> _printQr() async {
+    final validation = PayloadValidator.validateQrPayload(_qrType, _inputController.text);
+    if (!validation.isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(validation.message)),
+      );
+      return;
+    }
+
     final printer = ref.read(sunmiPrinterServiceProvider);
     await printer.printQRCode(data: _inputController.text);
 
@@ -115,13 +125,15 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('QR Code sent to SUNMI printer!')),
+        const SnackBar(content: Text('QR Code sent to thermal printer!')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final validation = PayloadValidator.validateQrPayload(_qrType, _inputController.text);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Module 3 – QR Generator'),
@@ -145,7 +157,7 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
                       ),
                       child: QrImageView(
                         data: _inputController.text.isEmpty
-                            ? 'SUNMI'
+                            ? 'Printa'
                             : _inputController.text,
                         version: QrVersions.auto,
                         size: _qrSize,
@@ -193,6 +205,8 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
                       decoration: const InputDecoration(labelText: 'Payload Data'),
                       onChanged: (_) => setState(() {}),
                     ),
+                    const SizedBox(height: 12),
+                    ValidationBanner(result: validation),
                     const SizedBox(height: 16),
 
                     // Sliders & Color Picker
@@ -243,7 +257,7 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _printQr,
+                    onPressed: validation.isValid ? _printQr : null,
                     icon: const Icon(Icons.print_rounded),
                     label: const Text('Print QR'),
                   ),

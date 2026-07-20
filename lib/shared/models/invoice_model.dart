@@ -105,7 +105,7 @@ class InvoiceModel {
 
   factory InvoiceModel.fromJson(Map<String, dynamic> json) => InvoiceModel(
         id: json['id'] ?? '',
-        companyName: json['company'] ?? 'SUNMI POS Store',
+        companyName: json['company'] ?? 'Printa Store',
         logoUrl: json['logo'],
         customerName: json['customer'] ?? 'Walk-in Customer',
         invoiceNumber: json['inv_num'] ?? 'INV-1001',
@@ -129,10 +129,42 @@ class InvoiceModel {
   static InvoiceModel fromCompactJsonString(String jsonStr) =>
       InvoiceModel.fromJson(jsonDecode(jsonStr));
 
+  InvoiceModel copyWith({
+    String? id,
+    String? companyName,
+    String? logoUrl,
+    String? customerName,
+    String? invoiceNumber,
+    DateTime? date,
+    String? currency,
+    double? taxPercentage,
+    double? discountPercentage,
+    List<InvoiceItem>? items,
+    String? notes,
+    String? tableNo,
+    String? orderType,
+  }) {
+    return InvoiceModel(
+      id: id ?? this.id,
+      companyName: companyName ?? this.companyName,
+      logoUrl: logoUrl ?? this.logoUrl,
+      customerName: customerName ?? this.customerName,
+      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+      date: date ?? this.date,
+      currency: currency ?? this.currency,
+      taxPercentage: taxPercentage ?? this.taxPercentage,
+      discountPercentage: discountPercentage ?? this.discountPercentage,
+      items: items ?? List.from(this.items),
+      notes: notes ?? this.notes,
+      tableNo: tableNo ?? this.tableNo,
+      orderType: orderType ?? this.orderType,
+    );
+  }
+
   static InvoiceModel createSample() {
     return InvoiceModel(
       id: 'sample_01',
-      companyName: 'SUNMI Bistro & Cafe',
+      companyName: 'Printa Bistro & Cafe',
       customerName: 'John Doe',
       invoiceNumber: 'INV-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
       date: DateTime.now(),

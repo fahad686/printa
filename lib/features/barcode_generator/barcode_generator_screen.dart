@@ -2,6 +2,8 @@ import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../shared/utils/payload_validator.dart';
+import '../../shared/widgets/validation_banner.dart';
 import '../../native/sunmi_printer_service.dart';
 import '../../shared/models/history_item_model.dart';
 import '../../shared/repositories/history_repository.dart';
@@ -17,7 +19,7 @@ class BarcodeGeneratorScreen extends ConsumerStatefulWidget {
 class _BarcodeGeneratorScreenState extends ConsumerState<BarcodeGeneratorScreen> {
   String _selectedSymbology = 'Code128';
   final TextEditingController _codeController =
-      TextEditingController(text: 'SUNMI-992014');
+      TextEditingController(text: 'PRTA-992014');
 
   final Map<String, Barcode> _barcodeMap = {
     'Code128': Barcode.code128(),
@@ -44,12 +46,22 @@ class _BarcodeGeneratorScreenState extends ConsumerState<BarcodeGeneratorScreen>
           _codeController.text = '012345678905';
           break;
         default:
-          _codeController.text = 'SUNMI-992014';
+          _codeController.text = 'PRTA-992014';
       }
     });
   }
 
   Future<void> _printBarcode() async {
+    final barcode = _barcodeMap[_selectedSymbology] ?? Barcode.code128();
+    final validation =
+        PayloadValidator.validateBarcode(_selectedSymbology, _codeController.text, barcode);
+    if (!validation.isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(validation.message)),
+      );
+      return;
+    }
+
     final printer = ref.read(sunmiPrinterServiceProvider);
     await printer.printBarCode(data: _codeController.text);
 
@@ -65,7 +77,7 @@ class _BarcodeGeneratorScreenState extends ConsumerState<BarcodeGeneratorScreen>
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Barcode printed on SUNMI device!')),
+        const SnackBar(content: Text('Barcode printed on POS device!')),
       );
     }
   }
@@ -73,6 +85,8 @@ class _BarcodeGeneratorScreenState extends ConsumerState<BarcodeGeneratorScreen>
   @override
   Widget build(BuildContext context) {
     final barcode = _barcodeMap[_selectedSymbology] ?? Barcode.code128();
+    final validation =
+        PayloadValidator.validateBarcode(_selectedSymbology, _codeController.text, barcode);
 
     return Scaffold(
       appBar: AppBar(
@@ -138,6 +152,8 @@ class _BarcodeGeneratorScreenState extends ConsumerState<BarcodeGeneratorScreen>
                           const InputDecoration(labelText: 'Barcode Content / SKU'),
                       onChanged: (_) => setState(() {}),
                     ),
+                    const SizedBox(height: 12),
+                    ValidationBanner(result: validation),
                   ],
                 ),
               ),
@@ -150,7 +166,7 @@ class _BarcodeGeneratorScreenState extends ConsumerState<BarcodeGeneratorScreen>
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _printBarcode,
+                    onPressed: validation.isValid ? _printBarcode : null,
                     icon: const Icon(Icons.print_rounded),
                     label: const Text('Print Barcode'),
                   ),

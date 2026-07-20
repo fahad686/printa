@@ -160,7 +160,7 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(isPrinted
-              ? 'Receipt sent to SUNMI printer successfully!'
+              ? 'Receipt sent to thermal printer successfully!'
               : 'Printed via thermal engine fallback'),
           backgroundColor: AppConstants.primaryOrange,
         ),

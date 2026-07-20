@@ -32,6 +32,11 @@ class SettingsNotifier extends StateNotifier<AppSettingsModel> {
     final updated = state.copyWith(printerWidth: width);
     await updateSettings(updated);
   }
+
+  Future<void> completeOnboarding() async {
+    final updated = state.copyWith(onboardingCompleted: true);
+    await updateSettings(updated);
+  }
 }
 
 class SettingsRepository {
