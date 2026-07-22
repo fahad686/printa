@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import '../../core/constants/app_constants.dart';
@@ -33,6 +34,7 @@ class _NFCInvoiceScreenState extends ConsumerState<NFCInvoiceScreen> {
     final jsonStr = _currentInvoice.toCompactJsonString();
 
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
+      HapticFeedback.successNotification();
       final ndef = Ndef.from(tag);
       if (ndef == null || !ndef.isWritable) {
         setState(() {
@@ -68,6 +70,7 @@ class _NFCInvoiceScreenState extends ConsumerState<NFCInvoiceScreen> {
     });
 
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
+      HapticFeedback.successNotification();
       final ndef = Ndef.from(tag);
       String readJson = '';
 

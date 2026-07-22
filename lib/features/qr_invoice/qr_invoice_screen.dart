@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -18,6 +19,7 @@ class _QRInvoiceScreenState extends ConsumerState<QRInvoiceScreen> {
   late InvoiceModel _invoice;
   bool _isScannerOpen = false;
   String _transferStatus = 'Offline QR Transfer Mode Ready';
+  String? _lastFailedPayload;
 
   @override
   void initState() {
@@ -27,18 +29,26 @@ class _QRInvoiceScreenState extends ConsumerState<QRInvoiceScreen> {
 
   void _onQrDetected(BarcodeCapture capture) {
     for (final barcode in capture.barcodes) {
-      if (barcode.rawValue != null) {
-        try {
-          final reconstructed = InvoiceModel.fromCompactJsonString(barcode.rawValue!);
+      final raw = barcode.rawValue;
+      if (raw == null) continue;
+      try {
+        final reconstructed = InvoiceModel.fromCompactJsonString(raw);
+        HapticFeedback.successNotification();
+        setState(() {
+          _invoice = reconstructed;
+          _isScannerOpen = false;
+          _lastFailedPayload = null;
+          _transferStatus =
+              'QR Scanned! Reconstructed Invoice #${reconstructed.invoiceNumber}';
+        });
+        break;
+      } catch (_) {
+        if (_lastFailedPayload != raw) {
+          _lastFailedPayload = raw;
+          HapticFeedback.errorNotification();
           setState(() {
-            _invoice = reconstructed;
-            _isScannerOpen = false;
-            _transferStatus =
-                'QR Scanned! Reconstructed Invoice #${reconstructed.invoiceNumber}';
+            _transferStatus = 'Invalid QR — not a Printa invoice payload';
           });
-          break;
-        } catch (_) {
-          // Invalid format, ignore
         }
       }
     }
