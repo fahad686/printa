@@ -8,6 +8,10 @@ A modular Flutter app for **handheld POS devices and thermal printers**. Design,
 
 ## Highlights
 
+- **Personalized dashboard** — time-of-day greeting, developer avatar, live device status
+- **Dynamic device name** — status card shows the real hardware device name (not hardcoded)
+- **Quick Actions strip** — one-tap shortcuts for Receipt, QR, Barcode, and Scanner
+- **Glassmorphism UI** — frosted-glass status card with pulsing LIVE indicator and stat pills
 - **Splash & onboarding** — first-run intro, then home
 - **Floating pill bottom nav** — Dashboard · Scanner · NFC · History · Settings
 - **Printa orange** Material 3 light/dark themes
@@ -16,11 +20,27 @@ A modular Flutter app for **handheld POS devices and thermal printers**. Design,
 
 ---
 
+## Home Screen — What's New (v1.1)
+
+| Area | Before | After |
+|------|--------|-------|
+| Header | Plain AppBar "Printa" title | Personalized greeting + "Printa Dashboard" + avatar |
+| Device status | Solid orange banner, hardcoded label | Glassmorphism card, **real device name** from `DeviceMetrics.deviceName` |
+| Live indicator | Static status text | Pulsing **● LIVE** dot with animation |
+| Status details | One text row | Three stat pills — 🖨 Printer / ⚡ Battery / 📄 Paper |
+| Quick actions | None — scroll grid only | **Horizontal row**: New Receipt · QR Code · Barcode · Scan |
+| Module colors | Uniform orange palette | **Unique gradient per module** (orange, purple, teal, blue, green, red) |
+| Module subtitles | "Module 1 / Module 2…" | Descriptive: "Build & print receipts", "8 ready presets"… |
+| Module cards | Large grid tiles | Compact horizontal cards with icon + title + description + chevron |
+| Tap feedback | Theme ripple only | **Scale animation** (press-to-shrink, release-to-grow) on every card |
+
+---
+
 ## Features & Modules
 
 | Module | Description |
 |--------|-------------|
-| **Dashboard** | Module grid, hardware status banner (printer, paper, battery, RAM, storage) |
+| **Dashboard** | Personalized home, hardware status, quick actions, module grid |
 | **1 – Receipt Builder** | Dynamic receipts with tax/discount, live preview, thermal print, PDF, share |
 | **2 – Receipt Templates** | 8 presets; edit, persist in Hive, share as PNG/PDF |
 | **3 – QR Generator** | Plain text, URL, Invoice JSON, WiFi, Phone, Email, vCard, UPI — print & share |
@@ -30,9 +50,10 @@ A modular Flutter app for **handheld POS devices and thermal printers**. Design,
 | **7 – Invoice in NFC** | Encode receipt JSON on tags; tap to reconstruct, preview, print |
 | **8 – QR to Receipt** | Offline invoice transfer via QR encode → scan → print |
 | **9 – PDF Generator** | A4 / 58mm / 80mm roll + signature canvas |
-| **10 – Printer Test Bench** | Alignments, styles, tables, feed, cut, status |
-| **11 – History Box** | Hive log of receipts, scans, QRs, barcodes, NFC, PDFs — search, filter, reprint |
-| **12 – Device Info & Settings** | Diagnostics and global prefs (business, tax, paper width, theme) |
+| **10 – Photo to PDF** | Pick photos, rename, share as PDF |
+| **11 – Printer Test Bench** | Alignments, styles, tables, feed, cut, status |
+| **12 – History Box** | Hive log of receipts, scans, QRs, barcodes, NFC, PDFs — search, filter, reprint |
+| **13 – Device Info & Settings** | Diagnostics and global prefs (business, tax, paper width, theme) |
 
 ---
 
@@ -48,7 +69,7 @@ A modular Flutter app for **handheld POS devices and thermal printers**. Design,
 | Codes | `qr_flutter`, `barcode_widget`, `mobile_scanner` |
 | NFC | `nfc_manager` |
 | Printer (Android) | `com.sunmi:printerlibrary` + MethodChannels `com.sunmi.hardware/*` |
-| UI | Material 3, Printa orange brand palette |
+| UI | Material 3, glassmorphism, Printa orange brand palette |
 
 ---
 
@@ -64,23 +85,23 @@ lib/
 ├── native/
 │   ├── sunmi_printer_service.dart
 │   ├── sunmi_scanner_service.dart
-│   └── device_info_service.dart
+│   └── device_info_service.dart        # DeviceMetrics (deviceName, battery, printerStatus…)
 ├── shared/
 │   ├── models/
-│   ├── repositories/                 # Settings, history, templates
+│   ├── repositories/                   # Settings, history, templates
 │   ├── utils/
-│   └── widgets/                      # Floating pill nav, cards, preview, validation…
+│   └── widgets/                        # Floating pill nav, cards, preview, validation…
 └── features/
     ├── splash/
     ├── onboarding/
-    ├── shell/                        # MainShell + floating pill bottom nav
-    ├── dashboard/
+    ├── shell/                           # MainShell + floating pill bottom nav
+    ├── dashboard/                       # Redesigned home screen (v1.1)
     ├── receipt_builder/
     ├── receipt_templates/
     ├── qr_generator/
     ├── barcode_generator/
     ├── scanner/
-    ├── nfc/                          # Hub + read/write/update/delete
+    ├── nfc/                             # Hub + read/write/update/delete
     ├── nfc_invoice/
     ├── qr_invoice/
     ├── pdf_generator/
@@ -121,11 +142,12 @@ flutter run -d <device-id>
 
 ---
 
-## Platform notes
+## Platform Notes
 
 - **Android POS:** Inner printer via Sunmi `InnerPrinterManager` / AIDL service `woyou.aidlservice.jiuiv5`
 - **Non-POS Android / iOS:** MethodChannel calls fail safely; camera scanner and PDF/share still work
 - **NFC:** Requires NFC hardware + permission; hub shows availability clearly
+- **Device name:** Resolved via `DeviceInfoService.getDeviceMetrics()` → `DeviceMetrics.deviceName`; falls back gracefully on non-Android platforms
 
 ---
 
