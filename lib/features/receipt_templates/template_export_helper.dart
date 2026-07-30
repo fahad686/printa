@@ -40,14 +40,9 @@ class TemplateExportHelper {
   static Future<void> shareAsPdf(ReceiptTemplateModel template) async {
     final pdfBytes = await PdfHelper.generateInvoicePdf(template.sampleInvoice);
     final safeName = template.title.replaceAll(RegExp(r'[^\w\s-]'), '').trim();
-    await Share.shareXFiles(
-      [
-        XFile.fromData(
-          pdfBytes,
-          name: '${safeName.isEmpty ? 'receipt' : safeName}.pdf',
-          mimeType: 'application/pdf',
-        ),
-      ],
+    await PdfHelper.sharePdfBytes(
+      pdfBytes,
+      fileName: '${safeName.isEmpty ? 'receipt' : safeName}.pdf',
       text: '${template.title} receipt template (PDF)',
     );
   }

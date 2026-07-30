@@ -16,9 +16,7 @@ class _SignatureCanvasWidgetState extends State<SignatureCanvasWidget> {
     setState(() {
       _points.clear();
     });
-    if (widget.onSignatureChanged != null) {
-      widget.onSignatureChanged!(_points);
-    }
+    widget.onSignatureChanged?.call(const []);
   }
 
   @override
@@ -52,22 +50,16 @@ class _SignatureCanvasWidgetState extends State<SignatureCanvasWidget> {
             borderRadius: BorderRadius.circular(12),
             child: GestureDetector(
               onPanUpdate: (details) {
-                RenderBox renderBox = context.findRenderObject() as RenderBox;
-                final localPos = renderBox.globalToLocal(details.globalPosition);
                 setState(() {
-                  _points.add(localPos);
+                  _points.add(details.localPosition);
                 });
-                if (widget.onSignatureChanged != null) {
-                  widget.onSignatureChanged!(_points);
-                }
+                widget.onSignatureChanged?.call(List<Offset?>.from(_points));
               },
-              onPanEnd: (details) {
+              onPanEnd: (_) {
                 setState(() {
                   _points.add(null);
                 });
-                if (widget.onSignatureChanged != null) {
-                  widget.onSignatureChanged!(_points);
-                }
+                widget.onSignatureChanged?.call(List<Offset?>.from(_points));
               },
               child: CustomPaint(
                 painter: _SignaturePainter(points: _points),

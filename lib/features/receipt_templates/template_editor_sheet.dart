@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../shared/models/invoice_model.dart';
 import '../../shared/models/receipt_template_model.dart';
+import '../../shared/widgets/invoice_line_item_editor.dart';
 
 class TemplateEditorSheet extends StatefulWidget {
   final ReceiptTemplateModel template;
@@ -268,48 +269,12 @@ class _TemplateEditorSheetState extends State<TemplateEditorSheet> {
                     ..._items.asMap().entries.map((entry) {
                       final index = entry.key;
                       final item = entry.value;
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 3,
-                                child: TextFormField(
-                                  initialValue: item.name,
-                                  decoration: const InputDecoration(labelText: 'Item'),
-                                  onChanged: (v) =>
-                                      _items[index] = item.copyWith(name: v),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: TextFormField(
-                                  initialValue: item.quantity.toString(),
-                                  keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(labelText: 'Qty'),
-                                  onChanged: (v) => _items[index] =
-                                      item.copyWith(quantity: int.tryParse(v) ?? 1),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: TextFormField(
-                                  initialValue: item.unitPrice.toString(),
-                                  keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(labelText: 'Price'),
-                                  onChanged: (v) => _items[index] = item.copyWith(
-                                      unitPrice: double.tryParse(v) ?? 0),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                onPressed: () => _removeItem(index),
-                              ),
-                            ],
-                          ),
-                        ),
+                      return InvoiceLineItemEditor(
+                        key: ValueKey(item.id),
+                        item: item,
+                        dense: true,
+                        onChanged: (updated) => setState(() => _items[index] = updated),
+                        onRemove: _items.length > 1 ? () => _removeItem(index) : null,
                       );
                     }),
                   ],

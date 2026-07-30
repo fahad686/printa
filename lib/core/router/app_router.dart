@@ -16,7 +16,9 @@ import '../../features/nfc/nfc_update_screen.dart';
 import '../../features/nfc/nfc_delete_screen.dart';
 import '../../features/nfc_invoice/nfc_invoice_screen.dart';
 import '../../features/qr_invoice/qr_invoice_screen.dart';
-import '../../features/pdf_generator/pdf_generator_screen.dart';
+import '../../features/pdf_generator/pdf_edit_screen.dart';
+import '../../features/pdf_generator/pdf_preview_screen.dart';
+import '../../features/pdf_generator/photo_to_pdf_screen.dart';
 import '../../features/sunmi_printer/sunmi_printer_screen.dart';
 import '../../features/history/history_screen.dart';
 import '../../features/device_info/device_info_screen.dart';
@@ -124,7 +126,17 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/pdf-generator',
-      builder: (context, state) => const PDFGeneratorScreen(),
+      builder: (context, state) => const PdfEditScreen(),
+      routes: [
+        GoRoute(
+          path: 'preview',
+          builder: (context, state) => const PdfPreviewScreen(),
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/photo-to-pdf',
+      builder: (context, state) => const PhotoToPdfScreen(),
     ),
     GoRoute(
       path: '/sunmi-printer',

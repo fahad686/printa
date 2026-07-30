@@ -129,10 +129,12 @@ class InvoiceModel {
   static InvoiceModel fromCompactJsonString(String jsonStr) =>
       InvoiceModel.fromJson(jsonDecode(jsonStr));
 
+  static const Object _unset = Object();
+
   InvoiceModel copyWith({
     String? id,
     String? companyName,
-    String? logoUrl,
+    Object? logoUrl = _unset,
     String? customerName,
     String? invoiceNumber,
     DateTime? date,
@@ -140,14 +142,14 @@ class InvoiceModel {
     double? taxPercentage,
     double? discountPercentage,
     List<InvoiceItem>? items,
-    String? notes,
-    String? tableNo,
-    String? orderType,
+    Object? notes = _unset,
+    Object? tableNo = _unset,
+    Object? orderType = _unset,
   }) {
     return InvoiceModel(
       id: id ?? this.id,
       companyName: companyName ?? this.companyName,
-      logoUrl: logoUrl ?? this.logoUrl,
+      logoUrl: identical(logoUrl, _unset) ? this.logoUrl : logoUrl as String?,
       customerName: customerName ?? this.customerName,
       invoiceNumber: invoiceNumber ?? this.invoiceNumber,
       date: date ?? this.date,
@@ -155,9 +157,9 @@ class InvoiceModel {
       taxPercentage: taxPercentage ?? this.taxPercentage,
       discountPercentage: discountPercentage ?? this.discountPercentage,
       items: items ?? List.from(this.items),
-      notes: notes ?? this.notes,
-      tableNo: tableNo ?? this.tableNo,
-      orderType: orderType ?? this.orderType,
+      notes: identical(notes, _unset) ? this.notes : notes as String?,
+      tableNo: identical(tableNo, _unset) ? this.tableNo : tableNo as String?,
+      orderType: identical(orderType, _unset) ? this.orderType : orderType as String?,
     );
   }
 

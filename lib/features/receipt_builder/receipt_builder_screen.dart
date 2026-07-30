@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../core/constants/app_constants.dart';
 import '../../native/sunmi_printer_service.dart';
 import '../../shared/models/history_item_model.dart';
 import '../../shared/models/invoice_model.dart';
 import '../../shared/models/receipt_template_model.dart';
 import '../../shared/repositories/history_repository.dart';
+import '../../shared/widgets/invoice_line_item_editor.dart';
 import '../../shared/widgets/receipt_preview_widget.dart';
 import '../pdf_generator/pdf_helper.dart';
 
@@ -27,6 +27,9 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
   late TextEditingController _currencyController;
   late TextEditingController _taxController;
   late TextEditingController _discountController;
+  late TextEditingController _notesController;
+  late TextEditingController _tableController;
+  late TextEditingController _orderTypeController;
 
   final List<InvoiceItem> _items = [
     InvoiceItem(id: '1', name: 'POS Thermal Printer Roll', quantity: 2, unitPrice: 12.50),
@@ -39,10 +42,14 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
     _companyController = TextEditingController(text: AppConstants.defaultBusinessName);
     _customerController = TextEditingController(text: 'Walk-in Customer');
     _invoiceNumController = TextEditingController(
-        text: 'INV-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}');
+      text: 'INV-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+    );
     _currencyController = TextEditingController(text: '\$');
     _taxController = TextEditingController(text: '10.0');
     _discountController = TextEditingController(text: '0.0');
+    _notesController = TextEditingController();
+    _tableController = TextEditingController();
+    _orderTypeController = TextEditingController();
   }
 
   @override
@@ -53,12 +60,18 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
     _currencyController.dispose();
     _taxController.dispose();
     _discountController.dispose();
+    _notesController.dispose();
+    _tableController.dispose();
+    _orderTypeController.dispose();
     super.dispose();
   }
 
   InvoiceModel _buildInvoiceFromForm() {
     final tax = double.tryParse(_taxController.text) ?? 0.0;
     final discount = double.tryParse(_discountController.text) ?? 0.0;
+    final notes = _notesController.text.trim();
+    final table = _tableController.text.trim();
+    final orderType = _orderTypeController.text.trim();
 
     return InvoiceModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -70,6 +83,9 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
       taxPercentage: tax,
       discountPercentage: discount,
       items: List.from(_items),
+      notes: notes.isEmpty ? null : notes,
+      tableNo: table.isEmpty ? null : table,
+      orderType: orderType.isEmpty ? null : orderType,
     );
   }
 
@@ -88,10 +104,12 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
 
   void _removeItem(int index) {
     if (_items.length > 1) {
-      setState(() {
-        _items.removeAt(index);
-      });
+      setState(() => _items.removeAt(index));
     }
+  }
+
+  void _updateItem(int index, InvoiceItem item) {
+    setState(() => _items[index] = item);
   }
 
   void _showPreviewDialog(InvoiceModel invoice) {
@@ -143,45 +161,51 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
     final printer = ref.read(sunmiPrinterServiceProvider);
     final isPrinted = await printer.printReceipt(invoice);
 
-    // Record history
-    final historyRepo = ref.read(historyRepositoryProvider);
-    await historyRepo.addHistoryItem(
-      HistoryItemModel(
-        id: invoice.id,
-        title: 'Printed Receipt #${invoice.invoiceNumber}',
-        category: 'receipt',
-        timestamp: DateTime.now(),
-        payload: invoice.toCompactJsonString(),
-        subtitle: '${invoice.currency}${invoice.grandTotal.toStringAsFixed(2)} - ${invoice.customerName}',
-      ),
-    );
+    await ref.read(historyRepositoryProvider).addHistoryItem(
+          HistoryItemModel(
+            id: invoice.id,
+            title: 'Printed Receipt #${invoice.invoiceNumber}',
+            category: 'receipt',
+            timestamp: DateTime.now(),
+            payload: invoice.toCompactJsonString(),
+            subtitle:
+                '${invoice.currency}${invoice.grandTotal.toStringAsFixed(2)} - ${invoice.customerName}',
+          ),
+        );
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isPrinted
-              ? 'Receipt sent to thermal printer successfully!'
-              : 'Printed via thermal engine fallback'),
+          content: Text(
+            isPrinted
+                ? 'Receipt sent to thermal printer successfully!'
+                : 'Printed via thermal engine fallback',
+          ),
           backgroundColor: AppConstants.primaryOrange,
         ),
       );
     }
   }
 
-  Future<void> _generateAndSharePdf(InvoiceModel invoice, {bool printPdf = false}) async {
-    final pdfBytes = await PdfHelper.generateInvoicePdf(invoice);
-    if (printPdf) {
-      await Printing.layoutPdf(onLayout: (_) async => pdfBytes);
-    } else {
-      await Share.shareXFiles(
-        [
-          XFile.fromData(
-            pdfBytes,
-            name: 'Invoice_${invoice.invoiceNumber}.pdf',
-            mimeType: 'application/pdf',
-          ),
-        ],
-        text: 'Invoice ${invoice.invoiceNumber} for ${invoice.customerName}',
+  Future<void> _generateAndSharePdf(
+    InvoiceModel invoice, {
+    bool printPdf = false,
+  }) async {
+    try {
+      final pdfBytes = await PdfHelper.generateInvoicePdf(invoice);
+      if (printPdf) {
+        await Printing.layoutPdf(onLayout: (_) async => pdfBytes);
+      } else {
+        await PdfHelper.sharePdfBytes(
+          pdfBytes,
+          fileName: 'Invoice_${invoice.invoiceNumber}.pdf',
+          text: 'Invoice ${invoice.invoiceNumber} for ${invoice.customerName}',
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('PDF failed: $e')),
       );
     }
   }
@@ -209,7 +233,6 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // Business Header Card
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -232,7 +255,8 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
                               Expanded(
                                 child: TextFormField(
                                   controller: _customerController,
-                                  decoration: const InputDecoration(labelText: 'Customer Name'),
+                                  decoration:
+                                      const InputDecoration(labelText: 'Customer Name'),
                                   onChanged: (_) => setState(() {}),
                                 ),
                               ),
@@ -240,7 +264,8 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
                               Expanded(
                                 child: TextFormField(
                                   controller: _invoiceNumController,
-                                  decoration: const InputDecoration(labelText: 'Invoice No.'),
+                                  decoration:
+                                      const InputDecoration(labelText: 'Invoice No.'),
                                   onChanged: (_) => setState(() {}),
                                 ),
                               ),
@@ -252,7 +277,9 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
                               Expanded(
                                 child: TextFormField(
                                   controller: _currencyController,
-                                  decoration: const InputDecoration(labelText: 'Currency Symbol'),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Currency Symbol',
+                                  ),
                                   onChanged: (_) => setState(() {}),
                                 ),
                               ),
@@ -270,19 +297,46 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
                                 child: TextFormField(
                                   controller: _discountController,
                                   keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(labelText: 'Discount %'),
+                                  decoration:
+                                      const InputDecoration(labelText: 'Discount %'),
                                   onChanged: (_) => setState(() {}),
                                 ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _tableController,
+                                  decoration: const InputDecoration(labelText: 'Table No'),
+                                  onChanged: (_) => setState(() {}),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _orderTypeController,
+                                  decoration:
+                                      const InputDecoration(labelText: 'Order Type'),
+                                  onChanged: (_) => setState(() {}),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          TextFormField(
+                            controller: _notesController,
+                            maxLines: 2,
+                            decoration: const InputDecoration(labelText: 'Notes'),
+                            onChanged: (_) => setState(() {}),
+                          ),
                         ],
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-                  // Dynamic Items List
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -298,77 +352,35 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-
                   ..._items.asMap().entries.map((entry) {
                     final index = entry.key;
                     final item = entry.value;
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: TextFormField(
-                                initialValue: item.name,
-                                decoration: const InputDecoration(labelText: 'Item Name'),
-                                onChanged: (val) {
-                                  _items[index] = item.copyWith(name: val);
-                                  setState(() {});
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              flex: 1,
-                              child: TextFormField(
-                                initialValue: item.quantity.toString(),
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(labelText: 'Qty'),
-                                onChanged: (val) {
-                                  final q = int.tryParse(val) ?? 1;
-                                  _items[index] = item.copyWith(quantity: q);
-                                  setState(() {});
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              flex: 2,
-                              child: TextFormField(
-                                initialValue: item.unitPrice.toString(),
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(labelText: 'Price'),
-                                onChanged: (val) {
-                                  final p = double.tryParse(val) ?? 0.0;
-                                  _items[index] = item.copyWith(unitPrice: p);
-                                  setState(() {});
-                                },
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-                              onPressed: () => _removeItem(index),
-                            ),
-                          ],
-                        ),
-                      ),
+                    return InvoiceLineItemEditor(
+                      key: ValueKey(item.id),
+                      item: item,
+                      onChanged: (updated) => _updateItem(index, updated),
+                      onRemove: _items.length > 1 ? () => _removeItem(index) : null,
                     );
                   }),
-
                   const SizedBox(height: 12),
-                  // Totals Summary Box
                   Card(
                     color: AppConstants.primaryOrange.withOpacity(0.08),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          _buildTotalRow('Subtotal', '${invoice.currency}${invoice.rawSubtotal.toStringAsFixed(2)}'),
-                          _buildTotalRow('Discount', '-${invoice.currency}${invoice.discountAmount.toStringAsFixed(2)}'),
-                          _buildTotalRow('Tax', '+${invoice.currency}${invoice.taxAmount.toStringAsFixed(2)}'),
+                          _buildTotalRow(
+                            'Subtotal',
+                            '${invoice.currency}${invoice.rawSubtotal.toStringAsFixed(2)}',
+                          ),
+                          _buildTotalRow(
+                            'Discount',
+                            '-${invoice.currency}${invoice.discountAmount.toStringAsFixed(2)}',
+                          ),
+                          _buildTotalRow(
+                            'Tax',
+                            '+${invoice.currency}${invoice.taxAmount.toStringAsFixed(2)}',
+                          ),
                           const Divider(),
                           _buildTotalRow(
                             'Grand Total',
@@ -382,8 +394,6 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
                 ],
               ),
             ),
-
-            // Action Buttons Bar
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -410,7 +420,9 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       onPressed: () => _generateAndSharePdf(invoice, printPdf: true),
                       icon: const Icon(Icons.picture_as_pdf_rounded),
@@ -438,8 +450,20 @@ class _ReceiptBuilderScreenState extends ConsumerState<ReceiptBuilderScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, fontSize: isBold ? 16 : 14)),
-          Text(value, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, fontSize: isBold ? 17 : 14)),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              fontSize: isBold ? 16 : 14,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              fontSize: isBold ? 17 : 14,
+            ),
+          ),
         ],
       ),
     );

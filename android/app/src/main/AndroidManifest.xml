@@ -45,6 +45,14 @@
             <data android:mimeType="text/plain"/>
         </intent>
         <intent>
+            <action android:name="android.intent.action.SEND"/>
+            <data android:mimeType="*/*"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:mimeType="application/pdf"/>
+        </intent>
+        <intent>
             <action android:name="woyou.aidlservice.jiuiv5.IWoyouService" />
         </intent>
         <package android:name="woyou.aidlservice.jiuiv5" />
