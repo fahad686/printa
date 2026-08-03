@@ -1,6 +1,11 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/constants/app_constants.dart';
@@ -18,6 +23,8 @@ class QRGeneratorScreen extends ConsumerStatefulWidget {
 }
 
 class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
+  final GlobalKey _qrKey = GlobalKey();
+  final FocusNode _payloadFocus = FocusNode();
   String _qrType = 'Plain Text';
   final TextEditingController _inputController =
       TextEditingController(text: 'https://printa.app');
@@ -25,6 +32,12 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
   double _qrSize = 200.0;
   Color _fgColor = Colors.black;
   Color _bgColor = Colors.white;
+  bool _sharing = false;
+
+  void _dismissKeyboard() {
+    _payloadFocus.unfocus();
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
 
   final List<String> _types = [
     'Plain Text',
@@ -37,8 +50,16 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
     'UPI / Payment',
   ];
 
+  @override
+  void dispose() {
+    _payloadFocus.dispose();
+    _inputController.dispose();
+    super.dispose();
+  }
+
   void _onTypeChanged(String? type) {
     if (type == null) return;
+    _dismissKeyboard();
     setState(() {
       _qrType = type;
       switch (type) {
@@ -72,6 +93,7 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
   }
 
   void _pickColor(bool isFg) {
+    _dismissKeyboard();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -101,7 +123,9 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
   }
 
   Future<void> _printQr() async {
-    final validation = PayloadValidator.validateQrPayload(_qrType, _inputController.text);
+    _dismissKeyboard();
+    final validation =
+        PayloadValidator.validateQrPayload(_qrType, _inputController.text);
     if (!validation.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(validation.message)),
@@ -112,11 +136,10 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
     final printer = ref.read(sunmiPrinterServiceProvider);
     await printer.printQRCode(data: _inputController.text);
 
-    // Save to history
     await ref.read(historyRepositoryProvider).addHistoryItem(
           HistoryItemModel(
             id: DateTime.now().millisecondsSinceEpoch.toString(),
-            title: 'QR Code (${_qrType})',
+            title: 'QR Code ($_qrType)',
             category: 'qr',
             timestamp: DateTime.now(),
             payload: _inputController.text,
@@ -130,44 +153,127 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
     }
   }
 
+  Future<ui.Image?> _captureQrImage() async {
+    final boundary =
+        _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    return boundary.toImage(pixelRatio: 3.0);
+  }
+
+  Future<void> _shareQrImage() async {
+    _dismissKeyboard();
+    final validation =
+        PayloadValidator.validateQrPayload(_qrType, _inputController.text);
+    if (!validation.isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(validation.message)),
+      );
+      return;
+    }
+    if (_sharing) return;
+
+    setState(() => _sharing = true);
+    try {
+      // Let the frame settle so RepaintBoundary is painted.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      final image = await _captureQrImage();
+      if (image == null) {
+        throw Exception('Could not capture QR image');
+      }
+
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        throw Exception('Could not encode QR PNG');
+      }
+
+      final bytes = byteData.buffer.asUint8List();
+      final dir = await getTemporaryDirectory();
+      final safeType = _qrType.replaceAll(RegExp(r'[^\w]+'), '_').toLowerCase();
+      final file = File(
+        '${dir.path}/printa_qr_${safeType}_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      await file.writeAsBytes(bytes, flush: true);
+
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'image/png', name: 'printa_qr_$safeType.png')],
+        text: 'QR ($_qrType): ${_inputController.text}',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Share QR failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
+  Future<void> _sharePayload() async {
+    _dismissKeyboard();
+    final text = _inputController.text.trim();
+    if (text.isEmpty) return;
+    await Share.share(text, subject: 'QR Payload ($_qrType)');
+  }
+
   @override
   Widget build(BuildContext context) {
-    final validation = PayloadValidator.validateQrPayload(_qrType, _inputController.text);
+    final validation =
+        PayloadValidator.validateQrPayload(_qrType, _inputController.text);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Module 3 – QR Generator'),
+        actions: [
+          IconButton(
+            tooltip: 'Share QR image',
+            onPressed: validation.isValid && !_sharing ? _shareQrImage : null,
+            icon: _sharing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.share_rounded),
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // QR Display Card
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _dismissKeyboard,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Column(
+            children: [
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: _bgColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: QrImageView(
-                        data: _inputController.text.isEmpty
-                            ? 'Printa'
-                            : _inputController.text,
-                        version: QrVersions.auto,
-                        size: _qrSize,
-                        eyeStyle: QrEyeStyle(
-                          eyeShape: QrEyeShape.square,
-                          color: _fgColor,
+                    RepaintBoundary(
+                      key: _qrKey,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: _bgColor,
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        dataModuleStyle: QrDataModuleStyle(
-                          dataModuleShape: QrDataModuleShape.square,
-                          color: _fgColor,
+                        child: QrImageView(
+                          data: _inputController.text.isEmpty
+                              ? 'Printa'
+                              : _inputController.text,
+                          version: QrVersions.auto,
+                          size: _qrSize,
+                          backgroundColor: _bgColor,
+                          eyeStyle: QrEyeStyle(
+                            eyeShape: QrEyeShape.square,
+                            color: _fgColor,
+                          ),
+                          dataModuleStyle: QrDataModuleStyle(
+                            dataModuleShape: QrDataModuleShape.square,
+                            color: _fgColor,
+                          ),
                         ),
                       ),
                     ),
@@ -180,10 +286,7 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // Configurations
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -201,15 +304,25 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _inputController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(labelText: 'Payload Data'),
+                      focusNode: _payloadFocus,
+                      minLines: 2,
+                      maxLines: 4,
+                      textInputAction: TextInputAction.done,
+                      onEditingComplete: _dismissKeyboard,
+                      onTapOutside: (_) => _dismissKeyboard(),
+                      decoration: InputDecoration(
+                        labelText: 'Payload Data',
+                        suffixIcon: IconButton(
+                          tooltip: 'Hide keyboard',
+                          onPressed: _dismissKeyboard,
+                          icon: const Icon(Icons.keyboard_hide_rounded),
+                        ),
+                      ),
                       onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: 12),
                     ValidationBanner(result: validation),
                     const SizedBox(height: 16),
-
-                    // Sliders & Color Picker
                     Row(
                       children: [
                         Expanded(
@@ -222,14 +335,15 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
                                 min: 120,
                                 max: 280,
                                 activeColor: AppConstants.primaryOrange,
-                                onChanged: (val) => setState(() => _qrSize = val),
+                                onChangeStart: (_) => _dismissKeyboard(),
+                                onChanged: (val) =>
+                                    setState(() => _qrSize = val),
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -249,10 +363,7 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // Action Buttons
             Row(
               children: [
                 Expanded(
@@ -264,15 +375,37 @@ class _QRGeneratorScreenState extends ConsumerState<QRGeneratorScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => Share.share(_inputController.text),
-                    icon: const Icon(Icons.share_rounded),
-                    label: const Text('Share Payload'),
+                  child: ElevatedButton.icon(
+                    onPressed:
+                        validation.isValid && !_sharing ? _shareQrImage : null,
+                    icon: _sharing
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.qr_code_2_rounded),
+                    label: const Text('Share QR'),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _inputController.text.trim().isEmpty
+                    ? null
+                    : _sharePayload,
+                icon: const Icon(Icons.text_snippet_rounded),
+                label: const Text('Share Payload Text'),
+              ),
+            ),
           ],
+          ),
         ),
       ),
     );

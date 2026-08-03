@@ -132,27 +132,6 @@ class DashboardScreen extends ConsumerWidget {
       route: '/nfc',
     ),
     _Module(
-      title: 'Invoice in NFC',
-      description: 'Tap to sync invoice',
-      icon: Icons.tap_and_play_rounded,
-      color: Color(0xFFFF6600),
-      route: '/nfc-invoice',
-    ),
-    _Module(
-      title: 'QR to Receipt',
-      description: 'Offline transfer',
-      icon: Icons.sync_alt_rounded,
-      color: Color(0xFF0891B2),
-      route: '/qr-invoice',
-    ),
-    _Module(
-      title: 'PDF Generator',
-      description: 'Edit → Preview → Share',
-      icon: Icons.picture_as_pdf_rounded,
-      color: Color(0xFFDC2626),
-      route: '/pdf-generator',
-    ),
-    _Module(
       title: 'Photo to PDF',
       description: 'Pick, rename & share',
       icon: Icons.add_photo_alternate_rounded,
