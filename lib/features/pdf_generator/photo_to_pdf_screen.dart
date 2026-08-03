@@ -190,6 +190,10 @@ class _PhotoToPdfScreenState extends ConsumerState<PhotoToPdfScreen> {
                 TextField(
                   controller: _nameController,
                   textInputAction: TextInputAction.done,
+                  onEditingComplete: () =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
+                  onTapOutside: (_) =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
                   decoration: const InputDecoration(
                     labelText: 'PDF file name',
                     suffixText: '.pdf',

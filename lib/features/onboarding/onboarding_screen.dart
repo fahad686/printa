@@ -56,10 +56,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     ),
     _OnboardPage(
       icon: Icons.nfc_rounded,
-      title: 'NFC tags & invoice transfer',
+      title: 'NFC tags',
       subtitle: 'Read · Write · Update · Erase',
       description:
-          'Store invoice data on NFC tags, update payloads, erase details, and move receipts offline with QR transfer.',
+          'Store data on NFC tags, update payloads, and erase details from the NFC Manager.',
     ),
   ];
 

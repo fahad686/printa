@@ -14,10 +14,6 @@ import '../../features/nfc/nfc_read_screen.dart';
 import '../../features/nfc/nfc_write_screen.dart';
 import '../../features/nfc/nfc_update_screen.dart';
 import '../../features/nfc/nfc_delete_screen.dart';
-import '../../features/nfc_invoice/nfc_invoice_screen.dart';
-import '../../features/qr_invoice/qr_invoice_screen.dart';
-import '../../features/pdf_generator/pdf_edit_screen.dart';
-import '../../features/pdf_generator/pdf_preview_screen.dart';
 import '../../features/pdf_generator/photo_to_pdf_screen.dart';
 import '../../features/sunmi_printer/sunmi_printer_screen.dart';
 import '../../features/history/history_screen.dart';
@@ -115,24 +111,6 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/barcode-generator',
       builder: (context, state) => const BarcodeGeneratorScreen(),
-    ),
-    GoRoute(
-      path: '/nfc-invoice',
-      builder: (context, state) => const NFCInvoiceScreen(),
-    ),
-    GoRoute(
-      path: '/qr-invoice',
-      builder: (context, state) => const QRInvoiceScreen(),
-    ),
-    GoRoute(
-      path: '/pdf-generator',
-      builder: (context, state) => const PdfEditScreen(),
-      routes: [
-        GoRoute(
-          path: 'preview',
-          builder: (context, state) => const PdfPreviewScreen(),
-        ),
-      ],
     ),
     GoRoute(
       path: '/photo-to-pdf',
